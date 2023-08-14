@@ -7,6 +7,7 @@ from blades.clients.client import BladesClient
 from .mean import _BaseAggregator
 
 
+
 class Dnc(_BaseAggregator):
     r"""A robust aggregator from paper `Manipulating the Byzantine: Optimizing
     Model Poisoning Attacks and Defenses for Federated Learning.
@@ -30,22 +31,33 @@ class Dnc(_BaseAggregator):
         updates = self._get_updates(inputs)
         d = len(updates[0])
 
+
+
+
+
         benign_ids = []
-        for i in range(self.num_iters):
-            indices = torch.randperm(d)[: self.sub_dim]
-            sub_updates = updates[:, indices]
-            mu = sub_updates.mean(dim=0)
-            centered_update = sub_updates - mu
-            v = torch.linalg.svd(centered_update, full_matrices=False)[2][0, :]
-            s = np.array(
-                [(torch.dot(update - mu, v) ** 2).item() for update in sub_updates]
-            )
+        
 
-            good = s.argsort()[
-                : len(updates) - int(self.fliter_frac * self.num_byzantine)
-            ]
-            benign_ids.extend(good)
+        mu = updates.mean(dim=0)
+        centered_update = updates - mu
 
-        benign_ids = list(set(benign_ids))
+        rank = 1000
+        Omega = torch.rand(centered_update.shape[1], rank)
+
+        Y = centered_update @ Omega
+        #for q in range(3):
+        #    Y = centered_update @ (centered_update.T @ Y)
+        Q, _ = torch.linalg.qr(Y)
+
+        B = Q.T @ centered_update
+        u_tilde, s, v = torch.linalg.svd(B, full_matrices=False)
+        
+
+        v = v[0, :]
+        score = np.array([(torch.dot(b_i, v) ** 2).item() for b_i in B])
+
+        good = score.argsort()[
+            : len(updates) - int(self.fliter_frac * self.num_byzantine)]
+        benign_ids = list(set(good))
         benign_updates = updates[benign_ids, :].mean(dim=0)
         return benign_updates
