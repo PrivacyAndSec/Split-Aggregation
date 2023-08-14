@@ -3,9 +3,9 @@
 
 We use Blades, which is a simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation.
 
-For the aggregation method, we change the code in /src/blades/aggregators/dnc.py to randomized SVD
+For the aggregation method, we change the code in /aggregators/dnc.py to randomized SVD
 
-For the encryption, we change the codes in /src/blades/clients/client.py, /src/blades/servers/server.py, /src/blades/core/simulator.py
+For the encryption, we change the codes in /clients/client.py, /servers/server.py, /core/simulator.py
 
 # How to run the code?
 
